@@ -1,0 +1,3 @@
+# A placeholder file to ensure this directory is tracked by git.
+# Prisma migration files will be generated here by `prisma migrate dev`.
+# Do not manually create or edit files in this directory.

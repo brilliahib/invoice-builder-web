@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// ─── Models ───────────────────────────────────────────────────
+
+/// Company profile — one per user
+model Company {
+  id              String    @id @default(uuid())
+  userId          String    @unique @map("user_id")
+  name            String
+  address         String
+  contactNumber   String?   @map("contact_number")
+  logoUrl         String?   @map("logo_url")
+  signatoryName   String?   @map("signatory_name")
+  signatoryTitle  String?   @map("signatory_title")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  invoices        Invoice[]
+
+  @@map("companies")
+}
+
+/// User account profile (separate from Supabase auth.users)
+model Account {
+  id          String    @id @default(uuid())
+  userId      String    @unique @map("user_id")
+  displayName String?   @map("display_name")
+  avatarUrl   String?   @map("avatar_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("accounts")
+}
+
+/// Invoice — always scoped to a company
+model Invoice {
+  id            String        @id @default(uuid())
+  companyId     String        @map("company_id")
+  invoiceNumber String        @map("invoice_number")
+  status        InvoiceStatus @default(DRAFT)
+  clientName    String        @map("client_name")
+  clientAddress String?       @map("client_address")
+  dueDate       DateTime      @map("due_date")
+  notes         String?
+  totalAmount   Decimal       @default(0) @map("total_amount")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  company       Company       @relation(fields: [companyId], references: [id])
+  lineItems     LineItem[]
+
+  @@unique([companyId, invoiceNumber])
+  @@index([companyId])
+  @@index([companyId, status])
+  @@index([companyId, createdAt(sort: Desc)])
+  @@map("invoices")
+}
+
+/// Line items for an invoice
+model LineItem {
+  id          String    @id @default(uuid())
+  invoiceId   String    @map("invoice_id")
+  description String
+  quantity    Decimal
+  unitPrice   Decimal   @map("unit_price")
+  total       Decimal
+  sortOrder   Int       @default(0) @map("sort_order")
+
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("line_items")
+}

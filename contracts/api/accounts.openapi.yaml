@@ -1,0 +1,65 @@
+openapi: "3.1.0"
+info:
+  title: Invoice Builder — Accounts API
+  version: "0.1.0"
+  description: |
+    Endpoints for managing the current user's account profile.
+
+paths:
+  /api/accounts/me:
+    get:
+      summary: Get the current user's account profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Account data
+    put:
+      summary: Update account profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountUpdateInput"
+      responses:
+        "200":
+          description: Account updated
+
+  /api/accounts/me/password:
+    put:
+      summary: Change password
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                new_password:
+                  type: string
+      responses:
+        "200":
+          description: Password changed
+        "400":
+          description: Current password incorrect
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    AccountUpdateInput:
+      type: object
+      properties:
+        display_name:
+          type: string
+        avatar_url:
+          type: string

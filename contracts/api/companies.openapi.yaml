@@ -1,0 +1,77 @@
+openapi: "3.1.0"
+info:
+  title: Invoice Builder — Companies API
+  version: "0.1.0"
+  description: |
+    Endpoints for reading and updating the company profile.
+    All endpoints require authentication. Scope is enforced per user.
+
+paths:
+  /api/companies/me:
+    get:
+      summary: Get the current user's company
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Company data returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+        "404":
+          description: No company linked to user
+    put:
+      summary: Update the current user's company
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyUpdateInput"
+      responses:
+        "200":
+          description: Company updated
+        "400":
+          description: Validation error
+        "403":
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Company:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        contact_number:
+          type: string
+        logo_url:
+          type: string
+        signatory_name:
+          type: string
+        signatory_title:
+          type: string
+    CompanyUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        contact_number:
+          type: string
+        signatory_name:
+          type: string
+        signatory_title:
+          type: string

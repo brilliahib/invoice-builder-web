@@ -1,0 +1,31 @@
+openapi: "3.1.0"
+info:
+  title: Invoice Builder — Auth API
+  version: "0.1.0"
+  description: |
+    Authentication endpoints handled via Supabase Auth.
+    Most auth actions are performed client-side using the Supabase SDK.
+    This file documents the auth flows and any server-side route handlers.
+
+# NOTE: Supabase handles the actual /auth/* endpoints.
+# Document any custom Next.js route handlers here.
+
+paths:
+  /api/auth/session:
+    get:
+      summary: Get the current server-side session
+      description: Used by Server Components to validate the current session cookie.
+      responses:
+        "200":
+          description: Session found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                  email:
+                    type: string
+        "401":
+          description: No active session
