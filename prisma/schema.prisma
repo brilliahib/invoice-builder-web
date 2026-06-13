@@ -29,6 +29,7 @@ model Company {
   address         String
   contactNumber   String?   @map("contact_number")
   logoUrl         String?   @map("logo_url")
+  signatureUrl    String?   @map("signature_url")
   signatoryName   String?   @map("signatory_name")
   signatoryTitle  String?   @map("signatory_title")
   createdAt       DateTime  @default(now()) @map("created_at")
@@ -36,6 +37,7 @@ model Company {
 
   invoices        Invoice[]
 
+  @@index([userId])
   @@map("companies")
 }
 
@@ -48,6 +50,7 @@ model Account {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  @@index([userId])
   @@map("accounts")
 }
 

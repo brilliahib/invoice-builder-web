@@ -8,23 +8,31 @@
  * NOTE: This file is a scaffold. Implement seed data after
  * the Supabase auth user is created manually or via admin API.
  */
+import { config } from 'dotenv';
+config({ path: '.env.local' });
 
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
+import { randomUUID } from 'crypto';
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting seed...');
 
-  // TODO: Replace with the actual Supabase user ID from your dev project
-  const DEV_USER_ID = process.env.DEV_SEED_USER_ID;
+  let DEV_USER_ID = process.env.DEV_SEED_USER_ID;
 
   if (!DEV_USER_ID) {
-    throw new Error(
-      'DEV_SEED_USER_ID environment variable is required for seeding. ' +
-      'Set it in .env.local with the Supabase user ID from your dev project.'
+    DEV_USER_ID = randomUUID();
+    console.warn(
+      '⚠️ DEV_SEED_USER_ID not provided in environment. Using random UUID: ' +
+        DEV_USER_ID +
+        '\n' +
+        'Note: You will not be able to log in as this user. To link seed data to a real account, set DEV_SEED_USER_ID.',
     );
   }
 

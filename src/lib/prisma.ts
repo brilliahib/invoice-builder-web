@@ -11,8 +11,11 @@ import { PrismaPg } from '@prisma/adapter-pg';
  * Docs: https://www.prisma.io/docs/orm/reference/prisma-config-reference
  */
 
+import pg from 'pg';
+
 const createPrismaClient = () => {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 };
 
