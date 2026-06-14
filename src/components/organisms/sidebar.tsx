@@ -27,11 +27,44 @@ const navItems = [
   { href: '/dashboard/account', label: 'Account', icon: User },
 ];
 
+import { useState, useEffect } from 'react';
+import { useCompanyList } from '@/features/company/queries/use-company-list';
+import { useCompanyStore } from '@/features/company/store/use-company-store';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '../ui/combobox';
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const { setOpenMobile } = useSidebar();
+
+  const { data: companies, isLoading } = useCompanyList();
+  const { selectedCompanyId, setSelectedCompanyId } = useCompanyStore();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (companies && companies.length > 0 && !selectedCompanyId) {
+      setSelectedCompanyId(companies[0].id);
+    }
+  }, [companies, selectedCompanyId, setSelectedCompanyId]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -44,34 +77,77 @@ export function Sidebar() {
     }
   };
 
+  const selectedCompany = companies?.find((company) => company.id === selectedCompanyId);
+
   return (
-    <ShadcnSidebar>
-      <SidebarHeader className="border-b px-6 py-5">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/images/logo.png"
-              alt="Invoice Builder Logo"
-              width={32}
-              height={32}
-              className="rounded-md border"
-            />
-            <span className="text-xl font-bold tracking-tight">Invoice Builder</span>
+    <ShadcnSidebar collapsible="icon" variant="inset">
+      <SidebarHeader className="border-b px-3">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/images/logo.png"
+                alt="Invoice Builder Logo"
+                width={32}
+                height={32}
+                className="rounded-md border"
+              />
+              <span className="text-xl font-bold tracking-tight group-data-[collapsible=icon]:hidden">
+                Invoice Builder
+              </span>
+            </div>
+            <p className="text-muted-foreground text-[10px] group-data-[collapsible=icon]:hidden">
+              Made by{' '}
+              <a
+                href="https://www.brilliahib.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                brilliahib.dev
+              </a>
+            </p>
           </div>
-          <p className="text-muted-foreground text-[10px]">
-            Made by{' '}
-            <a
-              href="https://www.brilliahib.dev"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              brilliahib.dev
-            </a>
-          </p>
+
+          {!isLoading && companies && companies.length > 0 && (
+            <div className="group-data-[collapsible=icon]:hidden">
+              <Combobox
+                value={selectedCompany ? selectedCompany.name : undefined}
+                onValueChange={(val) => {
+                  if (val) {
+                    const company = companies.find((c) => c.name === val);
+                    if (company) setSelectedCompanyId(company.id);
+                  }
+                }}
+                items={companies}
+              >
+                <div className="relative w-full">
+                  <ComboboxInput
+                    placeholder="Select a company..."
+                    className="h-9 w-full pl-8 text-sm"
+                    showTrigger={true}
+                  />
+                  <Building className="text-muted-foreground pointer-events-none absolute top-2.5 left-2.5 h-4 w-4" />
+                </div>
+                <ComboboxContent className={'w-full!'}>
+                  <ComboboxEmpty>No company found.</ComboboxEmpty>
+                  <ComboboxList>
+                    {companies.map((company) => (
+                      <ComboboxItem key={company.id} value={company.name}>
+                        <div className="flex items-center gap-2">
+                          <Building className="text-muted-foreground h-4 w-4 shrink-0" />
+                          <span className="truncate">{company.name}</span>
+                        </div>
+                      </ComboboxItem>
+                    ))}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
+            </div>
+          )}
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="space-y-4">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -89,7 +165,7 @@ export function Sidebar() {
                       render={
                         <Link href={item.href}>
                           <item.icon className="h-4 w-4" />
-                          <span>{item.label}</span>
+                          <span className="text-md">{item.label}</span>
                         </Link>
                       }
                     />

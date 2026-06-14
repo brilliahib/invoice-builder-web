@@ -8,14 +8,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const companyId = searchParams.get('companyId');
+
+  if (!companyId) {
+    return NextResponse.json({ error: 'Company ID is required' }, { status: 400 });
+  }
+
   const prisma = getPrisma();
   
+  // Verify the company belongs to the user
   const company = await prisma.company.findFirst({
-    where: { userId: session.id },
+    where: { id: companyId, userId: session.id },
   });
 
   if (!company) {
-    return NextResponse.json({ data: [] });
+    return NextResponse.json({ error: 'Company not found or unauthorized' }, { status: 404 });
   }
 
   const invoices = await prisma.invoice.findMany({
@@ -36,12 +44,18 @@ export async function POST(request: Request) {
   const body = await request.json();
   const prisma = getPrisma();
 
+  const companyId = body.companyId;
+  if (!companyId) {
+    return NextResponse.json({ error: 'Company ID is required' }, { status: 400 });
+  }
+
+  // Verify the company belongs to the user
   const company = await prisma.company.findFirst({
-    where: { userId: session.id },
+    where: { id: companyId, userId: session.id },
   });
 
   if (!company) {
-    return NextResponse.json({ error: 'Company not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Company not found or unauthorized' }, { status: 404 });
   }
 
   // Calculate total amount

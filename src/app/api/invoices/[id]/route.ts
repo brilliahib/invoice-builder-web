@@ -11,18 +11,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const prisma = getPrisma();
 
-  const company = await prisma.company.findFirst({
-    where: { userId: session.id },
-  });
-
-  if (!company) {
-    return NextResponse.json({ error: 'Company not found' }, { status: 404 });
-  }
-
   const invoice = await prisma.invoice.findFirst({
-    where: { 
+    where: {
       id,
-      companyId: company.id 
+      company: {
+        userId: session.id,
+      },
     },
     include: {
       lineItems: true,
@@ -30,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   });
 
   if (!invoice) {
-    return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Invoice not found or unauthorized' }, { status: 404 });
   }
 
   return NextResponse.json({ data: invoice });
@@ -45,21 +39,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const { id } = await params;
   const prisma = getPrisma();
 
-  const company = await prisma.company.findFirst({
-    where: { userId: session.id },
-  });
-
-  if (!company) {
-    return NextResponse.json({ error: 'Company not found' }, { status: 404 });
-  }
-
   // Verify ownership
   const invoice = await prisma.invoice.findFirst({
-    where: { id, companyId: company.id },
+    where: {
+      id,
+      company: {
+        userId: session.id,
+      },
+    },
   });
 
   if (!invoice) {
-    return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Invoice not found or unauthorized' }, { status: 404 });
   }
 
   await prisma.invoice.delete({
@@ -79,26 +70,23 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const body = await request.json();
   const prisma = getPrisma();
 
-  const company = await prisma.company.findFirst({
-    where: { userId: session.id },
-  });
-
-  if (!company) {
-    return NextResponse.json({ error: 'Company not found' }, { status: 404 });
-  }
-
   // Verify ownership
   const existingInvoice = await prisma.invoice.findFirst({
-    where: { id, companyId: company.id },
+    where: {
+      id,
+      company: {
+        userId: session.id,
+      },
+    },
   });
 
   if (!existingInvoice) {
-    return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Invoice not found or unauthorized' }, { status: 404 });
   }
 
   const totalAmount = body.lineItems.reduce(
     (sum: number, item: any) => sum + item.quantity * item.unitPrice,
-    0
+    0,
   );
 
   // Update invoice and replace line items

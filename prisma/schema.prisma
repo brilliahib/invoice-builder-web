@@ -21,10 +21,10 @@ enum InvoiceStatus {
 
 // ─── Models ───────────────────────────────────────────────────
 
-/// Company profile — one per user
+/// Company profile — one or more per user
 model Company {
   id              String    @id @default(uuid())
-  userId          String    @unique @map("user_id")
+  userId          String    @map("user_id")
   name            String
   address         String
   contactNumber   String?   @map("contact_number")

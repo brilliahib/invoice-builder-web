@@ -2,7 +2,7 @@
 
 import { useInvoiceList } from '../queries/use-invoice-list';
 import { useDeleteInvoice } from '../mutations/use-delete-invoice';
-import { useCurrentCompany } from '@/features/company/queries/use-current-company';
+import { useCompany } from '@/features/company/queries/use-company';
 import { formatCurrency } from '@/lib/formatters/currency';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -25,9 +25,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { InvoicePdfDownload } from './invoice-pdf-download';
 
+import { useCompanyStore } from '@/features/company/store/use-company-store';
+
 export function InvoiceTable() {
-  const { data: invoices, isLoading } = useInvoiceList();
-  const { data: company, isLoading: isLoadingCompany } = useCurrentCompany();
+  const selectedCompanyId = useCompanyStore((state) => state.selectedCompanyId);
+  const { data: invoices, isLoading } = useInvoiceList(selectedCompanyId);
+  const { data: company, isLoading: isLoadingCompany } = useCompany(selectedCompanyId || '');
   const deleteMutation = useDeleteInvoice();
 
   if (isLoading || isLoadingCompany) {

@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { invoiceSchema, type InvoiceFormData } from '../schemas/invoice.schema';
 import { useCreateInvoice } from '../mutations/use-create-invoice';
 import { useUpdateInvoice } from '../mutations/use-update-invoice';
+import { useCompanyStore } from '../../company/store/use-company-store';
 
 interface InvoiceFormProps {
   initialData?: InvoiceFormData;
@@ -30,6 +31,7 @@ export function InvoiceForm({ initialData, invoiceId }: InvoiceFormProps) {
   const createMutation = useCreateInvoice();
   const updateMutation = invoiceId ? useUpdateInvoice(invoiceId) : null;
   const isPending = Boolean(createMutation.isPending || (updateMutation && updateMutation.isPending));
+  const selectedCompanyId = useCompanyStore((state) => state.selectedCompanyId);
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -49,7 +51,15 @@ export function InvoiceForm({ initialData, invoiceId }: InvoiceFormProps) {
   });
 
   async function onSubmit(data: InvoiceFormData) {
+    if (!selectedCompanyId) {
+      toast.error('Please select a company first');
+      return;
+    }
+
     if (invoiceId && updateMutation) {
+      // updateMutation.mutate doesn't have companyId right now, let's assume it keeps the old one or updates. 
+      // Typically update doesn't change companyId, but let's pass it if needed. 
+      // Actually we just pass data for update.
       updateMutation.mutate(data, {
         onSuccess: () => {
           toast.success('Invoice updated');
@@ -60,7 +70,7 @@ export function InvoiceForm({ initialData, invoiceId }: InvoiceFormProps) {
         },
       });
     } else {
-      createMutation.mutate(data, {
+      createMutation.mutate({ data, companyId: selectedCompanyId }, {
         onSuccess: () => {
           toast.success('Invoice created');
           router.push('/dashboard/invoices');

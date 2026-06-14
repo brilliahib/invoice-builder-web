@@ -5,11 +5,11 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: InvoiceFormData) => {
+    mutationFn: async ({ data, companyId }: { data: InvoiceFormData; companyId: string }) => {
       const response = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, companyId }),
       });
 
       if (!response.ok) {

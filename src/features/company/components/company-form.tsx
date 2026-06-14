@@ -18,60 +18,56 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { companySchema, type CompanyFormData } from '../schemas/company.schema';
-import { useCurrentCompany } from '../queries/use-current-company';
+import { useCreateCompany } from '../mutations/use-create-company';
 import { useUpdateCompany } from '../mutations/use-update-company';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useRouter } from 'next/navigation';
 
-export function CompanyForm() {
-  const { data: company, isLoading } = useCurrentCompany();
-  const updateMutation = useUpdateCompany();
+interface CompanyFormProps {
+  initialData?: CompanyFormData;
+  companyId?: string;
+}
+
+export function CompanyForm({ initialData, companyId }: CompanyFormProps) {
+  const router = useRouter();
+  const createMutation = useCreateCompany();
+  const updateMutation = companyId ? useUpdateCompany(companyId) : null;
+  const isPending = Boolean(createMutation.isPending || (updateMutation && updateMutation.isPending));
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
-    defaultValues: {
+    defaultValues: initialData || {
       name: '',
       address: '',
       contactNumber: '',
       signatoryName: '',
       signatoryTitle: '',
       logoUrl: '',
+      signatureUrl: '',
     },
   });
 
-  useEffect(() => {
-    if (company) {
-      form.reset({
-        name: company.name || '',
-        address: company.address || '',
-        contactNumber: company.contactNumber || '',
-        signatoryName: company.signatoryName || '',
-        signatoryTitle: company.signatoryTitle || '',
-        logoUrl: company.logoUrl || '',
-        signatureUrl: company.signatureUrl || '',
+  async function onSubmit(data: CompanyFormData) {
+    if (companyId && updateMutation) {
+      updateMutation.mutate(data, {
+        onSuccess: () => {
+          toast.success('Company profile updated');
+          router.push('/dashboard/company');
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      });
+    } else {
+      createMutation.mutate(data, {
+        onSuccess: () => {
+          toast.success('Company created');
+          router.push('/dashboard/company');
+        },
+        onError: (error) => {
+          toast.error(error.message);
+        },
       });
     }
-  }, [company, form]);
-
-  async function onSubmit(data: CompanyFormData) {
-    updateMutation.mutate(data, {
-      onSuccess: () => {
-        toast.success('Company profile updated');
-      },
-      onError: (error) => {
-        toast.error(error.message);
-      },
-    });
-  }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-    );
   }
 
   return (
@@ -219,8 +215,8 @@ export function CompanyForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={updateMutation.isPending}>
-          {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+        <Button type="submit" disabled={isPending}>
+          {isPending ? 'Saving...' : 'Save Changes'}
         </Button>
       </form>
     </Form>

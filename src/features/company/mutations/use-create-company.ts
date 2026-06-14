@@ -1,20 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CompanyFormData } from '../schemas/company.schema';
 
-export function useUpdateCompany(companyId?: string) {
+export function useCreateCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CompanyFormData) => {
-      const url = companyId ? `/api/companies/${companyId}` : '/api/companies/me';
-      const response = await fetch(url, {
-        method: 'PUT',
+      const response = await fetch('/api/companies', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update company profile');
+        throw new Error('Failed to create company');
       }
       return response.json();
     },
