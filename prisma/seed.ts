@@ -37,18 +37,22 @@ async function main() {
   }
 
   // ── Company ──────────────────────────────────────────────────
-  const company = await prisma.company.upsert({
+  let company = await prisma.company.findFirst({
     where: { userId: DEV_USER_ID },
-    update: {},
-    create: {
-      userId: DEV_USER_ID,
-      name: 'Acme Corp',
-      address: '123 Main St, Jakarta, Indonesia 10110',
-      contactNumber: '+62 21 1234 5678',
-      signatoryName: 'John Doe',
-      signatoryTitle: 'CEO',
-    },
   });
+
+  if (!company) {
+    company = await prisma.company.create({
+      data: {
+        userId: DEV_USER_ID,
+        name: 'Acme Corp',
+        address: '123 Main St, Jakarta, Indonesia 10110',
+        contactNumber: '+62 21 1234 5678',
+        signatoryName: 'John Doe',
+        signatoryTitle: 'CEO',
+      },
+    });
+  }
 
   console.log('✅ Company seeded:', company.name);
 
